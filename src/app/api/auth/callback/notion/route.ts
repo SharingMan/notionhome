@@ -45,9 +45,12 @@ export async function GET(req: NextRequest) {
         }
 
         const data = await response.json();
-        const accessToken = data.access_token;
-        const botId = data.bot_id;
-        const workspaceId = data.workspace_id;
+        const accessToken = data.access_token as string | undefined;
+        const botId = data.bot_id as string | undefined;
+
+        if (!accessToken) {
+            return NextResponse.json({ error: 'Notion did not return access token' }, { status: 502 });
+        }
 
         // Create new Feed entry
         // We don't have user system, so each auth is new or we could check workspace?

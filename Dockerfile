@@ -43,6 +43,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/dev.db ./dev.db
 
 # Set the correct permission for look and pre-rendered cache
 RUN mkdir .next
