@@ -27,8 +27,9 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# If using npm comment out above and use below instead
-RUN npx prisma generate
+# Ensure build-time Prisma steps work even if DATABASE_URL isn't injected during image build.
+ARG DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL=${DATABASE_URL}
 RUN npm run build
 
 # Production image, copy all the files and run next
