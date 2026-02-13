@@ -59,7 +59,6 @@ export async function GET(req: NextRequest) {
                 botId: botId,
                 databaseId: '', // Will be set in next step
                 properties: '{}',
-                name: `Notion Calendar Sync - ${workspaceId}`,
             },
         });
 
