@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { Client } from '@notionhq/client';
 import ConfigForm from './ConfigForm';
 
-export default async function ConfigPage({ params }: { params: { feedId: string } }) {
+export default async function ConfigPage(props: { params: Promise<{ feedId: string }> }) {
+    const params = await props.params;
     const feed = await prisma.feed.findUnique({
         where: { id: params.feedId },
     });

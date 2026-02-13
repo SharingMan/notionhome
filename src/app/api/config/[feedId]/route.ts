@@ -3,14 +3,15 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { feedId: string } }
+    context: { params: Promise<{ feedId: string }> }
 ) {
     try {
+        const { feedId } = await context.params;
         const body = await req.json();
         const { databaseId, mappings } = body;
 
         const feed = await prisma.feed.update({
-            where: { id: params.feedId },
+            where: { id: feedId },
             data: {
                 databaseId,
                 properties: JSON.stringify(mappings),

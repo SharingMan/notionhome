@@ -4,9 +4,9 @@ import { Client } from '@notionhq/client';
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { createEvents, DateArray, EventAttributes } from 'ics';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
-        const { id: rawId } = await params;
+        const { id: rawId } = await context.params;
         let id = rawId;
         if (id.endsWith('.ics')) {
             id = id.slice(0, -4);
