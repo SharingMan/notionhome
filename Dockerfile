@@ -28,7 +28,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Ensure build-time Prisma steps work even if DATABASE_URL isn't injected during image build.
-ARG DATABASE_URL=file:./dev.db
+ARG DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
 ENV DATABASE_URL=${DATABASE_URL}
 RUN npm run build
 
@@ -44,7 +44,6 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/dev.db ./dev.db
 
 # Set the correct permission for look and pre-rendered cache
 RUN mkdir .next

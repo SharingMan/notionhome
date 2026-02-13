@@ -3,13 +3,20 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const postgresFallbackUrl = "postgresql://postgres:postgres@localhost:5432/postgres";
+const envDatabaseUrl = process.env["DATABASE_URL"];
+const datasourceUrl =
+  envDatabaseUrl && /^postgres(ql)?:\/\//i.test(envDatabaseUrl)
+    ? envDatabaseUrl
+    : postgresFallbackUrl;
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    // Allow build-time Prisma generate even when platform doesn't inject env vars during image build.
-    url: process.env["DATABASE_URL"] ?? "file:./dev.db",
+    // Keep Prisma generate/build working even if build-time DATABASE_URL is not injected.
+    url: datasourceUrl,
   },
 });

@@ -24,12 +24,11 @@ A premium, glassmorphism-styled application that syncs your Notion databases to 
 Create a `.env` file (or configure in Railway):
 
 ```env
-DATABASE_URL="file:./dev.db"  # Or your Postgres URL
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DBNAME"
 NOTION_CLIENT_ID="your_client_id"
 NOTION_CLIENT_SECRET="your_client_secret"
 NOTION_REDIRECT_URI="http://localhost:3000/api/auth/callback/notion" # Update for production
 NEXT_PUBLIC_BASE_URL="http://localhost:3000" # Your public app URL (used when generating feed URL)
-# TURSO_AUTH_TOKEN="" # Optional, only needed when DATABASE_URL points to Turso/libSQL remote
 ```
 
 ### 3. Local Development
@@ -48,11 +47,8 @@ npm run dev
     *   Update `NOTION_REDIRECT_URI` to your Railway domain (e.g., `https://project.up.railway.app/api/auth/callback/notion`).
     *   Set `NEXT_PUBLIC_BASE_URL` to your Railway domain (e.g., `https://project.up.railway.app`).
 5.  **Database**:
-    *   By default, this uses SQLite. on Railway, user data will be lost on redeploy unless you mount a volume.
-    *   **Recommended**: Add a Postgres plugin in Railway, and update `DATABASE_URL` to the Postgres connection string.
-    *   The app auto-selects Prisma adapter by `DATABASE_URL`:
-        * `postgres://` / `postgresql://` -> PostgreSQL adapter
-        * `file:` / `libsql:` / Turso URL -> libSQL adapter
+    *   This project uses PostgreSQL (`provider = "postgresql"` in Prisma schema).
+    *   In Railway, add a Postgres plugin and set `DATABASE_URL` from the plugin's connection string.
 
 ## Usage
 1.  Open the app.
@@ -67,6 +63,6 @@ npm run dev
 ## Tech Stack
 -   **Framework**: Next.js 16 (App Router)
 -   **Styling**: TailwindCSS
--   **Database**: Prisma (SQLite/Postgres)
+-   **Database**: Prisma (PostgreSQL)
 -   **Calendar Generation**: `ics` package
 -   **Notion**: Client SDK
