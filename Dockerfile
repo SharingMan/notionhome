@@ -28,7 +28,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Ensure build-time Prisma steps work even if DATABASE_URL isn't injected during image build.
-ARG DATABASE_URL="file:./dev.db"
+ARG DATABASE_URL=file:./dev.db
 ENV DATABASE_URL=${DATABASE_URL}
 RUN npm run build
 
