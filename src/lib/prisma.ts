@@ -1,9 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+type PrismaAdapter = PrismaLibSql | PrismaPg;
 
 const globalForPrisma = globalThis as unknown as {
     prisma?: PrismaClient;
-    libsqlAdapter?: PrismaLibSql;
+    adapter?: PrismaAdapter;
 };
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -11,12 +14,20 @@ if (!databaseUrl) {
     throw new Error('DATABASE_URL is not set');
 }
 
-const adapter =
-    globalForPrisma.libsqlAdapter ||
-    new PrismaLibSql({
-        url: databaseUrl,
+function createAdapter(url: string): PrismaAdapter {
+    if (/^postgres(ql)?:\/\//i.test(url)) {
+        return new PrismaPg({ connectionString: url });
+    }
+
+    return new PrismaLibSql({
+        url,
         authToken: process.env.TURSO_AUTH_TOKEN,
     });
+}
+
+const adapter =
+    globalForPrisma.adapter ||
+    createAdapter(databaseUrl);
 
 export const prisma =
     globalForPrisma.prisma ||
@@ -26,6 +37,6 @@ export const prisma =
     });
 
 if (process.env.NODE_ENV !== 'production') {
-    globalForPrisma.libsqlAdapter = adapter;
+    globalForPrisma.adapter = adapter;
     globalForPrisma.prisma = prisma;
 }

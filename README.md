@@ -29,6 +29,7 @@ NOTION_CLIENT_ID="your_client_id"
 NOTION_CLIENT_SECRET="your_client_secret"
 NOTION_REDIRECT_URI="http://localhost:3000/api/auth/callback/notion" # Update for production
 NEXT_PUBLIC_BASE_URL="http://localhost:3000" # Your public app URL (used when generating feed URL)
+# TURSO_AUTH_TOKEN="" # Optional, only needed when DATABASE_URL points to Turso/libSQL remote
 ```
 
 ### 3. Local Development
@@ -49,7 +50,9 @@ npm run dev
 5.  **Database**:
     *   By default, this uses SQLite. on Railway, user data will be lost on redeploy unless you mount a volume.
     *   **Recommended**: Add a Postgres plugin in Railway, and update `DATABASE_URL` to the Postgres connection string.
-    *   The app is compatible with Postgres (Prisma will handle it). You may need to update `prisma/schema.prisma` provider to `postgresql` if you switch.
+    *   The app auto-selects Prisma adapter by `DATABASE_URL`:
+        * `postgres://` / `postgresql://` -> PostgreSQL adapter
+        * `file:` / `libsql:` / Turso URL -> libSQL adapter
 
 ## Usage
 1.  Open the app.
