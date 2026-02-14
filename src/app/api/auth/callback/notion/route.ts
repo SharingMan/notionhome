@@ -65,8 +65,15 @@ export async function GET(req: NextRequest) {
             },
         });
 
-        // Redirect to config page
-        return NextResponse.redirect(new URL(`/config/${feed.id}`, req.url));
+        // Redirect to config page with a public origin (avoid internal 0.0.0.0 host in proxied envs).
+        const baseUrlFromEnv = process.env.NEXT_PUBLIC_BASE_URL?.trim().replace(/\/$/, '');
+        const forwardedHost = req.headers.get('x-forwarded-host');
+        const host = req.headers.get('host');
+        const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+        const baseUrlFromHeaders = (forwardedHost || host) ? `${forwardedProto}://${forwardedHost || host}` : req.nextUrl.origin;
+        const baseUrl = baseUrlFromEnv || baseUrlFromHeaders;
+
+        return NextResponse.redirect(`${baseUrl}/config/${feed.id}`);
 
     } catch (err) {
         console.error(err);
