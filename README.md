@@ -49,6 +49,7 @@ npm run dev
 5.  **Database**:
     *   This project uses PostgreSQL (`provider = "postgresql"` in Prisma schema).
     *   In Railway, add a Postgres plugin and set `DATABASE_URL` from the plugin's connection string.
+    *   The container runs `prisma db push` on startup to auto-sync schema.
 
 ## Usage
 1.  Open the app.
