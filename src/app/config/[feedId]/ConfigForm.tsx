@@ -1,10 +1,17 @@
 'use client';
 import { useState } from 'react';
-import type { DatabaseObjectResponse, PartialDatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 
 interface ConfigFormProps {
     feed: any; // Prisma Feed model
-    databases: (DatabaseObjectResponse | PartialDatabaseObjectResponse)[];
+    databases: any[];
+}
+
+function getSourceLabel(source: any): string {
+    const titleFromTitleArray = source?.title?.[0]?.plain_text;
+    const titleFromRichName = source?.name?.[0]?.plain_text;
+    const title = titleFromTitleArray || titleFromRichName || 'Untitled';
+    const kind = source?.object === 'data_source' ? 'Data Source' : 'Database';
+    return `${title} (${kind})`;
 }
 
 export default function ConfigForm({ feed, databases }: ConfigFormProps) {
@@ -17,7 +24,7 @@ export default function ConfigForm({ feed, databases }: ConfigFormProps) {
     const [loading, setLoading] = useState(false);
     const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
 
-    const selectedDatabase = databases.find((db) => db.id === selectedDbId) as DatabaseObjectResponse | undefined;
+    const selectedDatabase = databases.find((db) => db.id === selectedDbId);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,9 +76,9 @@ export default function ConfigForm({ feed, databases }: ConfigFormProps) {
                     required
                 >
                     <option value="">Select a database...</option>
-                    {databases.map((db: any) => (
+                    {databases.map((db) => (
                         <option key={db.id} value={db.id}>
-                            {(db.title?.[0]?.plain_text || 'Untitled') + (db.cover ? ' 🖼️' : '')}
+                            {getSourceLabel(db)}
                         </option>
                     ))}
                 </select>

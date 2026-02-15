@@ -49,9 +49,9 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         }
 
         // Query Notion for events
-        // We filter for items that have the Date property set
-        const response = await (notion.databases as any).query({
-            database_id: feed.databaseId,
+        // We filter for items that have the Date property set.
+        let response: any;
+        const queryOptions = {
             filter: {
                 property: mappings.date,
                 date: {
@@ -64,7 +64,24 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
                     direction: 'ascending',
                 },
             ],
-        });
+        };
+
+        try {
+            response = await (notion.databases as any).query({
+                database_id: feed.databaseId,
+                ...queryOptions,
+            });
+        } catch (databaseQueryError) {
+            // New Notion workspaces may expose "data_source" objects instead of "database".
+            if ((notion as any).dataSources?.query) {
+                response = await (notion as any).dataSources.query({
+                    data_source_id: feed.databaseId,
+                    ...queryOptions,
+                });
+            } else {
+                throw databaseQueryError;
+            }
+        }
 
         const events: EventAttributes[] = [];
 

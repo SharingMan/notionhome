@@ -17,18 +17,29 @@ export default async function ConfigPage(props: { params: Promise<{ feedId: stri
     let databases = [];
     let errorDetail: string | null = null;
     try {
-        const response = await notion.search({
-            filter: { value: 'database', property: 'object' } as any,
-            sort: { direction: 'descending', timestamp: 'last_edited_time' },
-            page_size: 100,
-        });
-        databases = response.results;
+        const allResults: any[] = [];
+        let startCursor: string | undefined;
+
+        // Iterate through search pages because a workspace may contain far more than 100 items.
+        for (let i = 0; i < 20; i++) {
+            const response = await notion.search({
+                sort: { direction: 'descending', timestamp: 'last_edited_time' },
+                page_size: 100,
+                start_cursor: startCursor,
+            });
+
+            allResults.push(...response.results);
+            if (!response.has_more || !response.next_cursor) break;
+            startCursor = response.next_cursor;
+        }
+
+        databases = allResults.filter((item: any) => item.object === 'database' || item.object === 'data_source');
     } catch (error) {
-        console.error('Error fetching databases (filtered search):', error);
+        console.error('Error fetching databases (search):', error);
         try {
-            // Fallback for API/version differences: fetch then filter client-side.
+            // Fallback for API/version differences: pull first page without sort.
             const fallback = await notion.search({ page_size: 100 });
-            databases = fallback.results.filter((item: any) => item.object === 'database');
+            databases = fallback.results.filter((item: any) => item.object === 'database' || item.object === 'data_source');
         } catch (fallbackError) {
             console.error('Error fetching databases (fallback search):', fallbackError);
             if (fallbackError instanceof Error) {
