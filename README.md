@@ -81,3 +81,7 @@ npm run dev
 -   **Database**: Prisma (PostgreSQL)
 -   **Calendar Generation**: `ics` package
 -   **Notion**: Client SDK
+
+## QA & Operations Docs
+- Regression checklist: `docs/REGRESSION_CHECKLIST.md`
+- Railway operations runbook: `docs/OPERATIONS_RUNBOOK.md`
