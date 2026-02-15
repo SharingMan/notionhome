@@ -28,6 +28,10 @@ function parseMappings(raw: string): { name?: string; date?: string; description
     return {};
 }
 
+function formatDateTime(date: Date): string {
+    return date.toLocaleString('zh-CN', { hour12: false });
+}
+
 function getPageMessage(searchParams: { status?: string; error?: string }): { tone: 'success' | 'error'; text: string } | null {
     if (searchParams.status === 'updated') {
         return { tone: 'success', text: '订阅已更新。' };
@@ -113,160 +117,192 @@ export default async function AdminPage(props: { searchParams: Promise<{ error?:
     const pageMessage = getPageMessage(searchParams);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="flex items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Notion 订阅项目</h1>
-                        <p className="text-sm text-gray-600 mt-1">当前共 {feeds.length} 个 feed。</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <a
-                            href="/api/auth/notion"
-                            className="text-sm bg-black text-white px-3 py-1.5 rounded-md hover:bg-gray-800"
-                        >
-                            新增订阅
-                        </a>
-                        <Link href="/" className="text-sm text-blue-600 hover:text-blue-700">
-                            返回首页
-                        </Link>
-                        <form action="/api/admin/logout" method="post">
-                            <button type="submit" className="text-sm text-gray-600 hover:text-gray-800">
-                                退出登录
-                            </button>
-                        </form>
+        <div className="min-h-screen bg-slate-50">
+            <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+                <div className="mb-6 rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-slate-200 sm:px-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Notion 订阅项目</h1>
+                            <p className="mt-2 text-sm text-slate-600">当前共 {feeds.length} 个 feed。</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <a
+                                href="/api/auth/notion"
+                                className="inline-flex items-center rounded-md bg-slate-900 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+                            >
+                                新增订阅
+                            </a>
+                            <Link
+                                href="/"
+                                className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                            >
+                                返回首页
+                            </Link>
+                            <form action="/api/admin/logout" method="post">
+                                <button
+                                    type="submit"
+                                    className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                                >
+                                    退出登录
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
                 {pageMessage && (
                     <div
-                        className={`rounded-md border px-4 py-3 text-sm ${
+                        className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
                             pageMessage.tone === 'success'
-                                ? 'bg-green-50 border-green-200 text-green-700'
-                                : 'bg-red-50 border-red-200 text-red-700'
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                : 'border-rose-200 bg-rose-50 text-rose-700'
                         }`}
                     >
                         {pageMessage.text}
                     </div>
                 )}
 
-                <div className="bg-white shadow-xl rounded-lg overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                        <thead className="bg-gray-100 text-gray-700">
-                            <tr>
-                                <th className="text-left px-4 py-3 font-semibold">Feed ID</th>
-                                <th className="text-left px-4 py-3 font-semibold">状态</th>
-                                <th className="text-left px-4 py-3 font-semibold">Bot ID</th>
-                                <th className="text-left px-4 py-3 font-semibold">数据库 ID</th>
-                                <th className="text-left px-4 py-3 font-semibold">标题字段</th>
-                                <th className="text-left px-4 py-3 font-semibold">日期字段</th>
-                                <th className="text-left px-4 py-3 font-semibold">描述字段</th>
-                                <th className="text-left px-4 py-3 font-semibold">创建时间</th>
-                                <th className="text-left px-4 py-3 font-semibold">更新时间</th>
-                                <th className="text-left px-4 py-3 font-semibold">ICS</th>
-                                <th className="text-left px-4 py-3 font-semibold">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {feeds.map((feed) => {
-                                const mappings = parseMappings(feed.properties);
-                                const icsUrl = `${baseUrl}/api/feed/${feed.id}.ics`;
-                                const isConfigured = Boolean(feed.databaseId && mappings.name && mappings.date);
-                                const updateFormId = `update-${feed.id}`;
-                                return (
-                                    <tr key={feed.id} className="border-t border-gray-200 align-top" id={`feed-${feed.id}`}>
-                                        <td className="px-4 py-3 font-mono text-xs break-all">{feed.id}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            {isConfigured ? (
-                                                <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">已配置</span>
-                                            ) : (
-                                                <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">待配置</span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-xs break-all">{feed.botId || '-'}</td>
-                                        <td className="px-4 py-3">
-                                            <input
-                                                form={updateFormId}
-                                                type="text"
-                                                name="databaseId"
-                                                defaultValue={feed.databaseId}
-                                                className="w-72 border border-gray-300 rounded px-2 py-1 font-mono text-xs"
-                                                placeholder="database/data_source id"
-                                                required
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <input
-                                                form={updateFormId}
-                                                type="text"
-                                                name="name"
-                                                defaultValue={mappings.name || ''}
-                                                className="w-40 border border-gray-300 rounded px-2 py-1"
-                                                placeholder="Name"
-                                                required
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <input
-                                                form={updateFormId}
-                                                type="text"
-                                                name="date"
-                                                defaultValue={mappings.date || ''}
-                                                className="w-40 border border-gray-300 rounded px-2 py-1"
-                                                placeholder="Date"
-                                                required
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <input
-                                                form={updateFormId}
-                                                type="text"
-                                                name="description"
-                                                defaultValue={mappings.description || ''}
-                                                className="w-40 border border-gray-300 rounded px-2 py-1"
-                                                placeholder="Description (可选)"
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">{feed.createdAt.toLocaleString('zh-CN')}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap">{feed.updatedAt.toLocaleString('zh-CN')}</td>
-                                        <td className="px-4 py-3">
-                                            {isConfigured ? (
-                                                <a href={icsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 break-all">
-                                                    {icsUrl}
-                                                </a>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 whitespace-nowrap space-y-2">
-                                            <form id={updateFormId} action={`/api/admin/feeds/${feed.id}/update`} method="post">
-                                                <button
-                                                    type="submit"
-                                                    className="inline-flex items-center px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700"
-                                                >
-                                                    保存
-                                                </button>
-                                            </form>
-                                            <Link
-                                                href={`/config/${feed.id}`}
-                                                className="inline-flex items-center px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100"
+                <div className="space-y-4">
+                    {feeds.map((feed) => {
+                        const mappings = parseMappings(feed.properties);
+                        const icsUrl = `${baseUrl}/api/feed/${feed.id}.ics`;
+                        const isConfigured = Boolean(feed.databaseId && mappings.name && mappings.date);
+                        const updateFormId = `update-${feed.id}`;
+
+                        return (
+                            <section key={feed.id} id={`feed-${feed.id}`} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                                <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                    <div className="min-w-0 space-y-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span
+                                                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                                                    isConfigured ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                                                }`}
                                             >
-                                                配置页
-                                            </Link>
-                                            <form action={`/api/admin/feeds/${feed.id}/delete`} method="post">
-                                                <button
-                                                    type="submit"
-                                                    className="inline-flex items-center px-3 py-1.5 rounded bg-red-600 text-white hover:bg-red-700"
+                                                {isConfigured ? '已配置' : '待配置'}
+                                            </span>
+                                            <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                                Feed
+                                            </span>
+                                        </div>
+                                        <p className="break-all font-mono text-xs text-slate-600">{feed.id}</p>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                                            <span>创建: {formatDateTime(feed.createdAt)}</span>
+                                            <span>更新: {formatDateTime(feed.updatedAt)}</span>
+                                        </div>
+                                        <p className="break-all font-mono text-xs text-slate-500">
+                                            Bot ID: {feed.botId || '-'}
+                                        </p>
+                                    </div>
+
+                                    <div className="w-full max-w-xl space-y-2">
+                                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">ICS 订阅地址</p>
+                                        {isConfigured ? (
+                                            <div className="flex flex-col gap-2 sm:flex-row">
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={icsUrl}
+                                                    className="h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-sm text-slate-700"
+                                                />
+                                                <a
+                                                    href={icsUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700"
                                                 >
-                                                    删除
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                                    打开
+                                                </a>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-slate-500">请先完成字段配置后再生成可用 ICS。</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <form
+                                    id={updateFormId}
+                                    action={`/api/admin/feeds/${feed.id}/update`}
+                                    method="post"
+                                    className="grid grid-cols-1 gap-3 md:grid-cols-2"
+                                >
+                                    <label className="md:col-span-2">
+                                        <span className="mb-1 block text-sm font-medium text-slate-700">数据库 ID</span>
+                                        <input
+                                            type="text"
+                                            name="databaseId"
+                                            defaultValue={feed.databaseId || ''}
+                                            className="h-10 w-full rounded-md border border-slate-300 px-3 font-mono text-xs text-slate-700"
+                                            placeholder="database/data_source id"
+                                            required
+                                        />
+                                    </label>
+                                    <label>
+                                        <span className="mb-1 block text-sm font-medium text-slate-700">标题字段</span>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            defaultValue={mappings.name || ''}
+                                            className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-700"
+                                            placeholder="Name"
+                                            required
+                                        />
+                                    </label>
+                                    <label>
+                                        <span className="mb-1 block text-sm font-medium text-slate-700">日期字段</span>
+                                        <input
+                                            type="text"
+                                            name="date"
+                                            defaultValue={mappings.date || ''}
+                                            className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-700"
+                                            placeholder="Date"
+                                            required
+                                        />
+                                    </label>
+                                    <label className="md:col-span-2">
+                                        <span className="mb-1 block text-sm font-medium text-slate-700">描述字段（可选）</span>
+                                        <input
+                                            type="text"
+                                            name="description"
+                                            defaultValue={mappings.description || ''}
+                                            className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-700"
+                                            placeholder="Description"
+                                        />
+                                    </label>
+                                </form>
+
+                                <div className="mt-4 flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="submit"
+                                        form={updateFormId}
+                                        className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                    >
+                                        保存
+                                    </button>
+                                    <Link
+                                        href={`/config/${feed.id}`}
+                                        className="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                                    >
+                                        配置页
+                                    </Link>
+                                    <form action={`/api/admin/feeds/${feed.id}/delete`} method="post">
+                                        <button
+                                            type="submit"
+                                            className="inline-flex items-center rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
+                                        >
+                                            删除
+                                        </button>
+                                    </form>
+                                </div>
+                            </section>
+                        );
+                    })}
+
+                    {feeds.length === 0 && (
+                        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+                            还没有订阅项目，点击上方“新增订阅”开始创建。
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
