@@ -23,6 +23,18 @@ function renderStatusMessage(
             text: isZh ? 'Premium 试用已开启。' : 'Premium trial has started.',
         };
     }
+    if (searchParams.status === 'paypal_activated') {
+        return {
+            tone: 'success',
+            text: isZh ? 'PayPal 订阅成功，Premium 已生效。' : 'PayPal subscription activated. Premium is now active.',
+        };
+    }
+    if (searchParams.status === 'paypal_canceled') {
+        return {
+            tone: 'error',
+            text: isZh ? '你已取消 PayPal 订阅流程。' : 'You canceled the PayPal subscription flow.',
+        };
+    }
     if (searchParams.error === 'trial_already_used') {
         return {
             tone: 'error',
@@ -33,6 +45,24 @@ function renderStatusMessage(
         return {
             tone: 'error',
             text: isZh ? '请先登录 Notion。' : 'Please sign in with Notion first.',
+        };
+    }
+    if (searchParams.error === 'paypal_create_failed') {
+        return {
+            tone: 'error',
+            text: isZh ? '创建 PayPal 订阅失败，请稍后重试。' : 'Failed to create PayPal subscription. Please try again.',
+        };
+    }
+    if (searchParams.error === 'paypal_activate_failed') {
+        return {
+            tone: 'error',
+            text: isZh ? 'PayPal 回调处理失败，请联系支持。' : 'PayPal activation failed on callback. Please contact support.',
+        };
+    }
+    if (searchParams.error === 'paypal_missing_subscription') {
+        return {
+            tone: 'error',
+            text: isZh ? '未获取到 PayPal 订阅编号。' : 'Missing PayPal subscription id.',
         };
     }
     return null;
@@ -47,8 +77,9 @@ export default async function PricingPage(props: { searchParams: Promise<{ statu
     const planSummary = session ? await getOwnerPlanSummary(session.ownerKey) : null;
     const isPremium = Boolean(planSummary?.premiumActive);
     const statusMessage = renderStatusMessage(isZh, searchParams);
-    const monthlyCheckout = process.env.BILLING_CHECKOUT_URL_MONTHLY?.trim();
-    const yearlyCheckout = process.env.BILLING_CHECKOUT_URL_YEARLY?.trim();
+    const paypalConfigured = Boolean(process.env.PAYPAL_CLIENT_ID?.trim() && process.env.PAYPAL_CLIENT_SECRET?.trim());
+    const monthlyPlanConfigured = Boolean(process.env.PAYPAL_PLAN_ID_MONTHLY?.trim());
+    const yearlyPlanConfigured = Boolean(process.env.PAYPAL_PLAN_ID_YEARLY?.trim());
 
     return (
         <div className="min-h-screen bg-[#f5f2eb] px-4 py-8 sm:px-8">
@@ -141,27 +172,29 @@ export default async function PricingPage(props: { searchParams: Promise<{ statu
                                 </form>
                             )}
 
-                            {session && !isPremium && (monthlyCheckout || yearlyCheckout) && (
+                            {session && !isPremium && paypalConfigured && (monthlyPlanConfigured || yearlyPlanConfigured) && (
                                 <div className="grid gap-2 sm:grid-cols-2">
-                                    {monthlyCheckout && (
-                                        <a
-                                            href={monthlyCheckout}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-                                        >
-                                            {isZh ? '按月订阅' : 'Monthly'}
-                                        </a>
+                                    {monthlyPlanConfigured && (
+                                        <form action="/api/billing/paypal/create-subscription" method="post">
+                                            <input type="hidden" name="cycle" value="monthly" />
+                                            <button
+                                                type="submit"
+                                                className="inline-flex w-full items-center justify-center rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                                            >
+                                                {isZh ? 'PayPal 按月订阅' : 'PayPal Monthly'}
+                                            </button>
+                                        </form>
                                     )}
-                                    {yearlyCheckout && (
-                                        <a
-                                            href={yearlyCheckout}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center rounded-xl border border-black/10 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-200"
-                                        >
-                                            {isZh ? '按年订阅' : 'Yearly'}
-                                        </a>
+                                    {yearlyPlanConfigured && (
+                                        <form action="/api/billing/paypal/create-subscription" method="post">
+                                            <input type="hidden" name="cycle" value="yearly" />
+                                            <button
+                                                type="submit"
+                                                className="inline-flex w-full items-center justify-center rounded-xl border border-black/10 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-200"
+                                            >
+                                                {isZh ? 'PayPal 按年订阅' : 'PayPal Yearly'}
+                                            </button>
+                                        </form>
                                     )}
                                 </div>
                             )}
@@ -172,11 +205,11 @@ export default async function PricingPage(props: { searchParams: Promise<{ statu
                                 </div>
                             )}
 
-                            {session && !isPremium && !monthlyCheckout && !yearlyCheckout && (
+                            {session && !isPremium && (!paypalConfigured || (!monthlyPlanConfigured && !yearlyPlanConfigured)) && (
                                 <p className="text-sm text-slate-500">
                                     {isZh
-                                        ? '可先开启试用；上线支付后请配置 BILLING_CHECKOUT_URL_MONTHLY / YEARLY。'
-                                        : 'Start trial now. Configure BILLING_CHECKOUT_URL_MONTHLY / YEARLY to enable paid checkout.'}
+                                        ? '可先开启试用；上线支付后请配置 PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET / PAYPAL_PLAN_ID_MONTHLY(YEARLY)。'
+                                        : 'Start trial now. Configure PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET / PAYPAL_PLAN_ID_MONTHLY(YEARLY) to enable checkout.'}
                                 </p>
                             )}
                         </div>
@@ -186,4 +219,3 @@ export default async function PricingPage(props: { searchParams: Promise<{ statu
         </div>
     );
 }
-
