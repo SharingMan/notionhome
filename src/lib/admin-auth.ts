@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from 'crypto';
+import { NextRequest } from 'next/server';
 
 export const ADMIN_SESSION_COOKIE = 'admin_session';
 
@@ -24,4 +25,10 @@ export function isValidAdminSession(sessionValue: string | undefined, adminToken
     }
 
     return timingSafeEqual(left, right);
+}
+
+export function hasAdminSessionFromRequest(req: NextRequest): boolean {
+    const sessionValue = req.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+    const adminToken = process.env.ADMIN_TOKEN?.trim();
+    return isValidAdminSession(sessionValue, adminToken);
 }

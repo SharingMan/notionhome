@@ -58,7 +58,7 @@ npm run dev
 1.  Set `ADMIN_TOKEN` in Railway variables and deploy.
 2.  Open `/admin` on your domain (for example, `https://your-app.up.railway.app/admin`).
 3.  Login with `ADMIN_TOKEN`.
-4.  You can view all authorized/subscribed feed items, config status, and ICS URL from this page.
+4.  You can create new subscriptions (via Notion OAuth), update mappings, and delete feed items from this page.
 
 ## Usage
 1.  Open the app.
