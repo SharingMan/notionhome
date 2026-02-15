@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE } from '@/lib/admin-auth';
+import { getPublicBaseUrl } from '@/lib/public-url';
 
 export async function POST(req: NextRequest) {
-    const response = NextResponse.redirect(new URL('/admin', req.url), { status: 303 });
+    const response = NextResponse.redirect(new URL('/admin', getPublicBaseUrl(req)), { status: 303 });
     response.cookies.set({
         name: ADMIN_SESSION_COOKIE,
         value: '',
