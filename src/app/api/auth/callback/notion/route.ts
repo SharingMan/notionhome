@@ -146,6 +146,7 @@ export async function GET(req: NextRequest) {
             data: {
                 accessToken,
                 botId,
+                displayName: ownerContext.workspaceName || ownerContext.ownerUserName || 'Notion Calendar',
                 databaseId: '',
                 properties: '{}',
                 ownerKey: ownerContext.ownerKey,

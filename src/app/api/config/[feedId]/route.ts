@@ -24,11 +24,19 @@ export async function POST(
             return NextResponse.json({ error: 'Invalid mappings payload' }, { status: 400 });
         }
 
+        const existingFeed = await prisma.feed.findUnique({
+            where: { id: feedId },
+            select: { displayName: true },
+        });
+
+        const defaultDisplayName = existingFeed?.displayName?.trim() ? undefined : mappings.name;
+
         const feed = await prisma.feed.update({
             where: { id: feedId },
             data: {
                 databaseId,
                 properties: JSON.stringify(mappings),
+                ...(defaultDisplayName ? { displayName: defaultDisplayName } : {}),
             },
         });
 

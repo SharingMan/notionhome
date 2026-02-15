@@ -10,6 +10,7 @@ model Feed {
   id            String   @id @default(uuid())
   accessToken   String
   botId         String?
+  displayName   String?
   databaseId    String
   properties    String   // JSON stringified configuration
   ownerKey      String?
