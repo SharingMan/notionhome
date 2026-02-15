@@ -5,6 +5,20 @@ import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoint
 import { createEvents, DateArray, EventAttributes } from 'ics';
 
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const DEFAULT_MAX_SYNC_ITEMS = 2000;
+const HARD_MAX_SYNC_ITEMS = 10000;
+const PAGE_SIZE_LIMIT = 100;
+const MAX_PAGE_REQUESTS = 200;
+
+type QuerySource = 'database' | 'data_source';
+
+function getMaxSyncItems(): number {
+    const raw = Number(process.env.NOTION_SYNC_MAX_ITEMS);
+    if (!Number.isFinite(raw) || raw <= 0) {
+        return DEFAULT_MAX_SYNC_ITEMS;
+    }
+    return Math.min(Math.floor(raw), HARD_MAX_SYNC_ITEMS);
+}
 
 function parseDateOnly(value: string): DateArray {
     const [year, month, day] = value.split('-').map(Number);
@@ -15,6 +29,48 @@ function addDaysToDateOnly(date: DateArray, days: number): DateArray {
     const utcDate = new Date(Date.UTC(date[0], date[1] - 1, date[2]));
     utcDate.setUTCDate(utcDate.getUTCDate() + days);
     return [utcDate.getUTCFullYear(), utcDate.getUTCMonth() + 1, utcDate.getUTCDate()];
+}
+
+async function queryNotionPages(
+    notion: Client,
+    source: QuerySource,
+    sourceId: string,
+    queryOptions: any,
+    maxItems: number
+): Promise<PageObjectResponse[]> {
+    const results: PageObjectResponse[] = [];
+    let startCursor: string | undefined;
+
+    for (let i = 0; i < MAX_PAGE_REQUESTS; i++) {
+        const remaining = maxItems - results.length;
+        if (remaining <= 0) break;
+
+        const pageSize = Math.min(PAGE_SIZE_LIMIT, remaining);
+        let response: any;
+
+        if (source === 'database') {
+            response = await (notion.databases as any).query({
+                database_id: sourceId,
+                ...queryOptions,
+                page_size: pageSize,
+                start_cursor: startCursor,
+            });
+        } else {
+            response = await (notion as any).dataSources.query({
+                data_source_id: sourceId,
+                ...queryOptions,
+                page_size: pageSize,
+                start_cursor: startCursor,
+            });
+        }
+
+        results.push(...(response.results as PageObjectResponse[]));
+
+        if (!response.has_more || !response.next_cursor) break;
+        startCursor = response.next_cursor;
+    }
+
+    return results;
 }
 
 export async function GET(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -48,9 +104,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
             return new NextResponse('Invalid feed mappings', { status: 400 });
         }
 
-        // Query Notion for events
-        // We filter for items that have the Date property set.
-        let response: any;
+        // Query Notion for events. Notion returns max 100 per request, so we paginate.
         const queryOptions = {
             filter: {
                 property: mappings.date,
@@ -66,18 +120,15 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
             ],
         };
 
+        const maxItems = getMaxSyncItems();
+        let pages: PageObjectResponse[] = [];
+
         try {
-            response = await (notion.databases as any).query({
-                database_id: feed.databaseId,
-                ...queryOptions,
-            });
+            pages = await queryNotionPages(notion, 'database', feed.databaseId, queryOptions, maxItems);
         } catch (databaseQueryError) {
             // New Notion workspaces may expose "data_source" objects instead of "database".
             if ((notion as any).dataSources?.query) {
-                response = await (notion as any).dataSources.query({
-                    data_source_id: feed.databaseId,
-                    ...queryOptions,
-                });
+                pages = await queryNotionPages(notion, 'data_source', feed.databaseId, queryOptions, maxItems);
             } else {
                 throw databaseQueryError;
             }
@@ -85,7 +136,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
 
         const events: EventAttributes[] = [];
 
-        for (const page of response.results as PageObjectResponse[]) {
+        for (const page of pages) {
             const props = page.properties;
 
             // Handle Title
