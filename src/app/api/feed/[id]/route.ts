@@ -7,6 +7,8 @@ import { createEvents, DateArray, EventAttributes } from 'ics';
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const DEFAULT_MAX_SYNC_ITEMS = 2000;
 const HARD_MAX_SYNC_ITEMS = 10000;
+const DEFAULT_LOOKBACK_DAYS = 3;
+const MAX_LOOKBACK_DAYS = 365;
 const PAGE_SIZE_LIMIT = 100;
 const MAX_PAGE_REQUESTS = 200;
 
@@ -18,6 +20,42 @@ function getMaxSyncItems(): number {
         return DEFAULT_MAX_SYNC_ITEMS;
     }
     return Math.min(Math.floor(raw), HARD_MAX_SYNC_ITEMS);
+}
+
+function getLookbackDays(): number {
+    const raw = Number(process.env.NOTION_SYNC_LOOKBACK_DAYS);
+    if (!Number.isFinite(raw) || raw < 0) {
+        return DEFAULT_LOOKBACK_DAYS;
+    }
+    return Math.min(Math.floor(raw), MAX_LOOKBACK_DAYS);
+}
+
+function formatDateOnlyUTC(date: Date): string {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getWindowStartDateOnly(lookbackDays: number): string {
+    const now = new Date();
+    const utcMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    utcMidnight.setUTCDate(utcMidnight.getUTCDate() - lookbackDays);
+    return formatDateOnlyUTC(utcMidnight);
+}
+
+function toComparableTimestamp(dateValue: string, isEndBoundary: boolean): number | null {
+    if (DATE_ONLY_REGEX.test(dateValue)) {
+        const [year, month, day] = dateValue.split('-').map(Number);
+        const base = Date.UTC(year, month - 1, day);
+        // For end boundaries, date-only values are inclusive in Notion;
+        // shift to next day start for consistent overlap checks.
+        return isEndBoundary ? base + 24 * 60 * 60 * 1000 : base;
+    }
+
+    const parsed = new Date(dateValue);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.getTime();
 }
 
 function parseDateOnly(value: string): DateArray {
@@ -105,12 +143,25 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         }
 
         // Query Notion for events. Notion returns max 100 per request, so we paginate.
+        const lookbackDays = getLookbackDays();
+        const windowStartDateOnly = getWindowStartDateOnly(lookbackDays);
+        const windowStartTimestamp = Date.parse(`${windowStartDateOnly}T00:00:00.000Z`);
         const queryOptions = {
             filter: {
-                property: mappings.date,
-                date: {
-                    is_not_empty: true,
-                },
+                and: [
+                    {
+                        property: mappings.date,
+                        date: {
+                            is_not_empty: true,
+                        },
+                    },
+                    {
+                        property: mappings.date,
+                        date: {
+                            on_or_after: windowStartDateOnly,
+                        },
+                    },
+                ],
             },
             sorts: [
                 {
@@ -154,6 +205,13 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
 
             const startDateStr = dateProp.date.start;
             const endDateStr = dateProp.date.end;
+
+            const comparableStart = toComparableTimestamp(startDateStr, false);
+            if (comparableStart === null) continue;
+
+            const comparableEnd = endDateStr ? toComparableTimestamp(endDateStr, true) : null;
+            const inWindow = comparableStart >= windowStartTimestamp || (comparableEnd !== null && comparableEnd >= windowStartTimestamp);
+            if (!inWindow) continue;
 
             const isAllDay = DATE_ONLY_REGEX.test(startDateStr);
             let start: DateArray;

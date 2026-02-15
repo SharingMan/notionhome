@@ -30,6 +30,7 @@ NOTION_CLIENT_SECRET="your_client_secret"
 NOTION_REDIRECT_URI="http://localhost:3000/api/auth/callback/notion" # Update for production
 NEXT_PUBLIC_BASE_URL="http://localhost:3000" # Your public app URL (used when generating feed URL)
 NOTION_SYNC_MAX_ITEMS="2000" # Optional: max number of Notion items exported to ICS
+NOTION_SYNC_LOOKBACK_DAYS="3" # Optional: include events from N days ago to future
 ```
 
 ### 3. Local Development
