@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { detectLocaleFromHeaders } from '@/lib/i18n';
 import { NOTION_USER_SESSION_COOKIE, parseNotionUserSessionValue } from '@/lib/notion-user-session';
 import { parseFeedMappings } from '@/lib/feed-mapping';
+import { getOwnerPlanSummary } from '@/lib/billing';
 import CopyUrlButton from './CopyUrlButton';
 
 function getBaseUrl(headerList: Headers): string {
@@ -80,6 +81,8 @@ export default async function MySubscriptionsPage(props: { searchParams: Promise
         where: { ownerKey: session.ownerKey },
         orderBy: { updatedAt: 'desc' },
     });
+    const planSummary = await getOwnerPlanSummary(session.ownerKey);
+    const isPremium = planSummary.premiumActive;
 
     const displayName = session.ownerUserName || session.workspaceName || session.ownerUserId || session.workspaceId || 'Notion User';
     const pageMessage = getMessage(isZh, searchParams);
@@ -95,6 +98,12 @@ export default async function MySubscriptionsPage(props: { searchParams: Promise
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <Link
+                            href="/pricing"
+                            className="inline-flex items-center rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                        >
+                            Pricing
+                        </Link>
                         <Link
                             href="/"
                             className="inline-flex items-center rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
@@ -123,6 +132,20 @@ export default async function MySubscriptionsPage(props: { searchParams: Promise
                         {pageMessage.text}
                     </div>
                 )}
+
+                <div className="mb-4 rounded-lg border border-black/10 bg-white px-4 py-3 text-sm text-slate-700">
+                    {isZh ? '当前方案：' : 'Current plan: '}
+                    <span className="font-semibold">{isPremium ? 'Premium' : 'Free'}</span>
+                    {' · '}
+                    {isZh ? '订阅数量：' : 'Feeds: '}
+                    <span className="font-semibold">{planSummary.feedCount}</span>
+                    {!isPremium && Number.isFinite(planSummary.maxFeeds) && (
+                        <>
+                            {' / '}
+                            <span className="font-semibold">{planSummary.maxFeeds}</span>
+                        </>
+                    )}
+                </div>
 
                 <section className="overflow-hidden rounded-xl border border-black/10 bg-[#efe6d7] shadow-sm">
                     <div className="flex items-center justify-between border-b border-black/10 px-6 py-4">
@@ -209,4 +232,3 @@ export default async function MySubscriptionsPage(props: { searchParams: Promise
         </div>
     );
 }
-

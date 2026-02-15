@@ -32,6 +32,10 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000" # Your public app URL (used when ge
 ADMIN_TOKEN="change_me_to_a_long_random_string" # Optional: enable /admin dashboard login
 NOTION_SYNC_MAX_ITEMS="2000" # Optional: max number of Notion items exported to ICS
 NOTION_SYNC_LOOKBACK_DAYS="3" # Optional: include events from N days ago to future
+FREE_PLAN_MAX_FEEDS="1" # Optional: free tier feed limit
+PREMIUM_TRIAL_DAYS="14" # Optional: trial duration in days
+BILLING_CHECKOUT_URL_MONTHLY="" # Optional: external monthly checkout link
+BILLING_CHECKOUT_URL_YEARLY="" # Optional: external yearly checkout link
 ```
 
 ### 3. Local Development
@@ -74,6 +78,12 @@ npm run dev
 1.  Open `/my` on your domain (e.g. `https://your-app.up.railway.app/my`).
 2.  Click `Notion 登录 / Sign in with Notion`.
 3.  After OAuth, you'll see subscriptions bound to your Notion account/workspace.
+
+### Pricing (Commercialization MVP)
+1.  Open `/pricing`.
+2.  Free plan is limited by `FREE_PLAN_MAX_FEEDS` (default: 1).
+3.  Users can start a free trial (`PREMIUM_TRIAL_DAYS`, default: 14).
+4.  Optional: configure external checkout links (`BILLING_CHECKOUT_URL_MONTHLY`, `BILLING_CHECKOUT_URL_YEARLY`).
 
 ## Tech Stack
 -   **Framework**: Next.js 16 (App Router)

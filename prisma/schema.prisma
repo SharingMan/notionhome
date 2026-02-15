@@ -6,6 +6,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum PlanTier {
+  FREE
+  PREMIUM
+}
+
 model Feed {
   id            String   @id @default(uuid())
   accessToken   String
@@ -24,4 +29,14 @@ model Feed {
 
   @@index([ownerKey])
   @@index([workspaceId])
+}
+
+model OwnerPlan {
+  ownerKey     String   @id
+  tier         PlanTier @default(FREE)
+  periodEndsAt DateTime?
+  source       String?
+  trialUsedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

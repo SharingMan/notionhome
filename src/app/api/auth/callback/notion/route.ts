@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getPublicBaseUrl } from '@/lib/public-url';
 import { createNotionUserSessionValue, NOTION_USER_SESSION_COOKIE } from '@/lib/notion-user-session';
+import { getOwnerPlanSummary } from '@/lib/billing';
 
 type OwnerContext = {
     ownerKey?: string;
@@ -139,6 +140,13 @@ export async function GET(req: NextRequest) {
                 });
             }
             return loginResponse;
+        }
+
+        if (ownerContext.ownerKey) {
+            const planSummary = await getOwnerPlanSummary(ownerContext.ownerKey);
+            if (!planSummary.canCreateFeed) {
+                return NextResponse.redirect(`${baseUrl}/pricing?reason=limit`, { status: 303 });
+            }
         }
 
         // Create feed for connect flow.
