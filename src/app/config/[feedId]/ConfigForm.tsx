@@ -67,6 +67,22 @@ export default function ConfigForm({ feed, databases, locale }: ConfigFormProps)
                 <p className="text-sm text-gray-500">
                     {t.feedReadyHint}
                 </p>
+                <div className="flex flex-wrap gap-2">
+                    <a
+                        href={generatedUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                    >
+                        {t.feedReadyOpen}
+                    </a>
+                    <a
+                        href="/my"
+                        className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    >
+                        {t.feedReadyManage}
+                    </a>
+                </div>
             </div>
         );
     }
