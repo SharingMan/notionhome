@@ -6,6 +6,13 @@ datasource db {
   provider = "postgresql"
 }
 
+// Kept for schema compatibility with previously deployed billing versions.
+// Billing logic is rolled back, but preserving this model avoids destructive db push.
+enum PlanTier {
+  FREE
+  PREMIUM
+}
+
 model Feed {
   id            String   @id @default(uuid())
   accessToken   String
@@ -24,4 +31,22 @@ model Feed {
 
   @@index([ownerKey])
   @@index([workspaceId])
+}
+
+model OwnerPlan {
+  ownerKey                 String   @id
+  tier                     PlanTier @default(FREE)
+  periodEndsAt             DateTime?
+  source                   String?
+  trialUsedAt              DateTime?
+  stripeCustomerId         String?  @unique
+  stripeSubscriptionId     String?  @unique
+  stripeSubscriptionStatus String?
+  stripePriceId            String?
+  paypalPayerId            String?
+  paypalSubscriptionId     String?  @unique
+  paypalSubscriptionStatus String?
+  paypalPlanId             String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 }
