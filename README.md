@@ -29,6 +29,7 @@ NOTION_CLIENT_ID="your_client_id"
 NOTION_CLIENT_SECRET="your_client_secret"
 NOTION_REDIRECT_URI="http://localhost:3000/api/auth/callback/notion" # Update for production
 NEXT_PUBLIC_BASE_URL="http://localhost:3000" # Your public app URL (used when generating feed URL)
+ADMIN_TOKEN="change_me_to_a_long_random_string" # Optional: enable /admin dashboard login
 NOTION_SYNC_MAX_ITEMS="2000" # Optional: max number of Notion items exported to ICS
 NOTION_SYNC_LOOKBACK_DAYS="3" # Optional: include events from N days ago to future
 ```
@@ -52,6 +53,12 @@ npm run dev
     *   This project uses PostgreSQL (`provider = "postgresql"` in Prisma schema).
     *   In Railway, add a Postgres plugin and set `DATABASE_URL` from the plugin's connection string.
     *   The container runs `prisma db push` on startup to auto-sync schema.
+
+### 5. Admin Dashboard (optional)
+1.  Set `ADMIN_TOKEN` in Railway variables and deploy.
+2.  Open `/admin` on your domain (for example, `https://your-app.up.railway.app/admin`).
+3.  Login with `ADMIN_TOKEN`.
+4.  You can view all authorized/subscribed feed items, config status, and ICS URL from this page.
 
 ## Usage
 1.  Open the app.
