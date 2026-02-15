@@ -32,15 +32,11 @@ model Feed {
 }
 
 model OwnerPlan {
-  ownerKey                String   @id
-  tier                    PlanTier @default(FREE)
-  periodEndsAt            DateTime?
-  source                  String?
-  trialUsedAt             DateTime?
-  paypalPayerId           String?
-  paypalSubscriptionId    String?  @unique
-  paypalSubscriptionStatus String?
-  paypalPlanId            String?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  ownerKey     String   @id
+  tier         PlanTier @default(FREE)
+  periodEndsAt DateTime?
+  source       String?
+  trialUsedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

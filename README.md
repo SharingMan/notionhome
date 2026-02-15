@@ -34,12 +34,8 @@ NOTION_SYNC_MAX_ITEMS="2000" # Optional: max number of Notion items exported to 
 NOTION_SYNC_LOOKBACK_DAYS="3" # Optional: include events from N days ago to future
 FREE_PLAN_MAX_FEEDS="1" # Optional: free tier feed limit
 PREMIUM_TRIAL_DAYS="14" # Optional: trial duration in days
-PAYPAL_ENV="sandbox" # Optional: sandbox/live (default sandbox)
-PAYPAL_CLIENT_ID="" # Optional: required for PayPal checkout
-PAYPAL_CLIENT_SECRET="" # Optional: required for PayPal checkout
-PAYPAL_PLAN_ID_MONTHLY="" # Optional: PayPal monthly subscription plan id
-PAYPAL_PLAN_ID_YEARLY="" # Optional: PayPal yearly subscription plan id
-PAYPAL_WEBHOOK_ID="" # Optional: for PayPal webhook signature verification
+BILLING_CHECKOUT_URL_MONTHLY="" # Optional: external monthly checkout link
+BILLING_CHECKOUT_URL_YEARLY="" # Optional: external yearly checkout link
 ```
 
 ### 3. Local Development
@@ -87,12 +83,7 @@ npm run dev
 1.  Open `/pricing`.
 2.  Free plan is limited by `FREE_PLAN_MAX_FEEDS` (default: 1).
 3.  Users can start a free trial (`PREMIUM_TRIAL_DAYS`, default: 14).
-4.  Configure PayPal subscription checkout with:
-    - `PAYPAL_CLIENT_ID`
-    - `PAYPAL_CLIENT_SECRET`
-    - `PAYPAL_PLAN_ID_MONTHLY` and/or `PAYPAL_PLAN_ID_YEARLY`
-5.  Optional webhook sync endpoint:
-    - `POST /api/billing/paypal/webhook` (set `PAYPAL_WEBHOOK_ID`).
+4.  Optional: configure external checkout links (`BILLING_CHECKOUT_URL_MONTHLY`, `BILLING_CHECKOUT_URL_YEARLY`).
 
 ## Tech Stack
 -   **Framework**: Next.js 16 (App Router)

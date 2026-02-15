@@ -67,21 +67,14 @@ Expected:
   - `Cache-Control: public, max-age=0, s-maxage=30, stale-while-revalidate=30`
 - [ ] Content reflects Notion updates within expected subscription refresh window.
 
-### F. Pricing / Billing
-
-- [ ] Open `/pricing`, confirm Free/Premium cards render.
-- [ ] Free user over feed limit is redirected to `/pricing?reason=limit`.
-- [ ] Start trial button works and plan changes to Premium.
-- [ ] If PayPal configured, monthly/yearly checkout buttons are visible.
-- [ ] If PayPal not configured, page shows configuration hint instead of checkout buttons.
-
 ## 3) Release Sign-off
 
 - [ ] Automated baseline passed.
-- [ ] Manual flow A-F passed.
+- [ ] Manual flow A-E passed.
 - [ ] Railway deployment green.
 - [ ] Production smoke test passed on:
   - `/`
   - `/my`
   - `/admin`
   - one live ICS URL
+

@@ -17,13 +17,6 @@ Optional:
 - `ADMIN_TOKEN` (enables `/admin`)
 - `NOTION_SYNC_MAX_ITEMS` (default `2000`)
 - `NOTION_SYNC_LOOKBACK_DAYS` (default `3`)
-- `FREE_PLAN_MAX_FEEDS` (default `1`)
-- `PREMIUM_TRIAL_DAYS` (default `14`)
-- `PAYPAL_ENV` (`sandbox` / `live`)
-- `PAYPAL_CLIENT_ID`
-- `PAYPAL_CLIENT_SECRET`
-- `PAYPAL_PLAN_ID_MONTHLY` / `PAYPAL_PLAN_ID_YEARLY`
-- `PAYPAL_WEBHOOK_ID` (for webhook verification)
 
 ## 2) Railway Deploy Procedure
 
@@ -118,28 +111,6 @@ Fix:
 2. Increase `NOTION_SYNC_MAX_ITEMS` if needed.
 3. Check `NOTION_SYNC_LOOKBACK_DAYS` for window filtering behavior.
 
-### H. PayPal checkout cannot start
-
-Cause:
-- Missing PayPal env vars or invalid plan id.
-
-Fix:
-1. Verify `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`.
-2. Verify `PAYPAL_PLAN_ID_MONTHLY` or `PAYPAL_PLAN_ID_YEARLY`.
-3. Confirm `PAYPAL_ENV` matches your plan environment (`sandbox` vs `live`).
-4. Retry from `/pricing`.
-
-### I. PayPal webhook rejected
-
-Cause:
-- Signature verification failed or missing `PAYPAL_WEBHOOK_ID`.
-
-Fix:
-1. Set correct `PAYPAL_WEBHOOK_ID`.
-2. Ensure webhook URL is:
-   - `https://<PUBLIC_BASE_URL>/api/billing/paypal/webhook`
-3. Re-send webhook event from PayPal dashboard.
-
 ## 5) Operational Commands
 
 Run locally:
@@ -162,3 +133,4 @@ If a deployment introduces regression:
 1. In Railway, redeploy previous healthy commit.
 2. Keep env vars unchanged unless incident is config-related.
 3. Re-run smoke test on `/`, `/my`, `/admin`, one ICS URL.
+
