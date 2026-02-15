@@ -165,7 +165,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
             headers: {
                 'Content-Type': 'text/calendar; charset=utf-8',
                 'Content-Disposition': `attachment; filename="notion-calendar-${id}.ics"`,
-                'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=300',
+                'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=30',
             },
         });
 
