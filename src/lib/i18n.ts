@@ -41,6 +41,7 @@ export const messages = {
             subtitle:
                 'Seamlessly sync your Notion databases with Apple Calendar via ICS. Always up-to-date, secure, and beautiful.',
             connect: 'Connect Notion',
+            mySubscriptions: 'My Subscriptions',
             github: 'View on GitHub',
             features: [
                 {
@@ -98,6 +99,7 @@ export const messages = {
             titleAccent: '全新体验',
             subtitle: '通过 ICS 将 Notion 数据库同步到 Apple 日历。安全、稳定、体验更好。',
             connect: '连接 Notion',
+            mySubscriptions: '我的订阅',
             github: '查看 GitHub',
             features: [
                 {

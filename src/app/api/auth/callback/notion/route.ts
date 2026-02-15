@@ -1,9 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getPublicBaseUrl } from '@/lib/public-url';
+import { createNotionUserSessionValue, NOTION_USER_SESSION_COOKIE } from '@/lib/notion-user-session';
+
+type OwnerContext = {
+    ownerKey?: string;
+    ownerUserId?: string;
+    ownerUserName?: string;
+    workspaceId?: string;
+    workspaceName?: string;
+    workspaceIcon?: string;
+};
+
+function getStringOrUndefined(value: unknown): string | undefined {
+    return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function buildOwnerContext(data: any): OwnerContext {
+    const botId = getStringOrUndefined(data?.bot_id);
+    const workspaceId = getStringOrUndefined(data?.workspace_id);
+    const workspaceName = getStringOrUndefined(data?.workspace_name);
+    const workspaceIcon = getStringOrUndefined(data?.workspace_icon);
+    const ownerUserId = getStringOrUndefined(data?.owner?.user?.id);
+    const ownerUserName = getStringOrUndefined(data?.owner?.user?.name);
+
+    const ownerKey = ownerUserId
+        ? `user:${ownerUserId}`
+        : workspaceId
+            ? `workspace:${workspaceId}`
+            : botId
+                ? `bot:${botId}`
+                : undefined;
+
+    return {
+        ownerKey,
+        ownerUserId,
+        ownerUserName,
+        workspaceId,
+        workspaceName,
+        workspaceIcon,
+    };
+}
 
 export async function GET(req: NextRequest) {
     const code = req.nextUrl.searchParams.get('code');
     const error = req.nextUrl.searchParams.get('error');
+    const mode = req.nextUrl.searchParams.get('state') === 'login' ? 'login' : 'connect';
 
     if (error) {
         return NextResponse.json({ error }, { status: 400 });
@@ -47,33 +89,87 @@ export async function GET(req: NextRequest) {
         const data = await response.json();
         const accessToken = data.access_token as string | undefined;
         const botId = data.bot_id as string | undefined;
+        const ownerContext = buildOwnerContext(data);
+        const baseUrl = getPublicBaseUrl(req);
 
         if (!accessToken) {
             return NextResponse.json({ error: 'Notion did not return access token' }, { status: 502 });
         }
 
-        // Create new Feed entry
-        // We don't have user system, so each auth is new or we could check workspace?
-        // Let's create a new Feed each time for simplicity in this "stateless" flow.
-        // The user will configure it on the next screen.
+        // Backfill legacy rows that were created before owner fields existed.
+        if (ownerContext.ownerKey && botId) {
+            await prisma.feed.updateMany({
+                where: {
+                    botId,
+                    ownerKey: null,
+                },
+                data: {
+                    ownerKey: ownerContext.ownerKey,
+                    ownerUserId: ownerContext.ownerUserId,
+                    ownerUserName: ownerContext.ownerUserName,
+                    workspaceId: ownerContext.workspaceId,
+                    workspaceName: ownerContext.workspaceName,
+                    workspaceIcon: ownerContext.workspaceIcon,
+                },
+            });
+        }
+
+        const sessionValue = ownerContext.ownerKey
+            ? createNotionUserSessionValue({
+                ownerKey: ownerContext.ownerKey,
+                ownerUserId: ownerContext.ownerUserId,
+                ownerUserName: ownerContext.ownerUserName,
+                workspaceId: ownerContext.workspaceId,
+                workspaceName: ownerContext.workspaceName,
+                workspaceIcon: ownerContext.workspaceIcon,
+            })
+            : null;
+
+        if (mode === 'login') {
+            const loginResponse = NextResponse.redirect(`${baseUrl}/my`, { status: 303 });
+            if (sessionValue) {
+                loginResponse.cookies.set({
+                    name: NOTION_USER_SESSION_COOKIE,
+                    value: sessionValue,
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    path: '/',
+                    maxAge: 60 * 60 * 24 * 30,
+                });
+            }
+            return loginResponse;
+        }
+
+        // Create feed for connect flow.
         const feed = await prisma.feed.create({
             data: {
-                accessToken: accessToken,
-                botId: botId,
-                databaseId: '', // Will be set in next step
+                accessToken,
+                botId,
+                databaseId: '',
                 properties: '{}',
+                ownerKey: ownerContext.ownerKey,
+                ownerUserId: ownerContext.ownerUserId,
+                ownerUserName: ownerContext.ownerUserName,
+                workspaceId: ownerContext.workspaceId,
+                workspaceName: ownerContext.workspaceName,
+                workspaceIcon: ownerContext.workspaceIcon,
             },
         });
 
-        // Redirect to config page with a public origin (avoid internal 0.0.0.0 host in proxied envs).
-        const baseUrlFromEnv = process.env.NEXT_PUBLIC_BASE_URL?.trim().replace(/\/$/, '');
-        const forwardedHost = req.headers.get('x-forwarded-host');
-        const host = req.headers.get('host');
-        const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
-        const baseUrlFromHeaders = (forwardedHost || host) ? `${forwardedProto}://${forwardedHost || host}` : req.nextUrl.origin;
-        const baseUrl = baseUrlFromEnv || baseUrlFromHeaders;
-
-        return NextResponse.redirect(`${baseUrl}/config/${feed.id}`);
+        const connectResponse = NextResponse.redirect(`${baseUrl}/config/${feed.id}`, { status: 303 });
+        if (sessionValue) {
+            connectResponse.cookies.set({
+                name: NOTION_USER_SESSION_COOKIE,
+                value: sessionValue,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 30,
+            });
+        }
+        return connectResponse;
 
     } catch (err) {
         console.error(err);

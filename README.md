@@ -70,6 +70,11 @@ npm run dev
 7.  In Apple Calendar (macOS): `File` -> `New Calendar Subscription` -> Paste URL.
 8.  In iOS: `Settings` -> `Calendar` -> `Accounts` -> `Add Account` -> `Other` -> `Add Subscribed Calendar`.
 
+### My Subscriptions (Notion login)
+1.  Open `/my` on your domain (e.g. `https://your-app.up.railway.app/my`).
+2.  Click `Notion 登录 / Sign in with Notion`.
+3.  After OAuth, you'll see subscriptions bound to your Notion account/workspace.
+
 ## Tech Stack
 -   **Framework**: Next.js 16 (App Router)
 -   **Styling**: TailwindCSS

@@ -43,6 +43,10 @@ export default async function Home() {
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
 
+              <Link href="/my" className="px-6 py-3 text-sm font-medium text-gray-300 border border-white/20 rounded-full hover:text-white hover:border-white/40 transition-colors">
+                {t.mySubscriptions}
+              </Link>
+
               <a href="https://github.com/yourusername/notion-calendar-sync" target="_blank" rel="noopener noreferrer" className="px-6 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors">
                 {t.github}
               </a>

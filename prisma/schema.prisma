@@ -7,11 +7,20 @@ datasource db {
 }
 
 model Feed {
-  id          String   @id @default(uuid())
-  accessToken String
-  botId       String?
-  databaseId  String
-  properties  String   // JSON stringified configuration
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid())
+  accessToken   String
+  botId         String?
+  databaseId    String
+  properties    String   // JSON stringified configuration
+  ownerKey      String?
+  ownerUserId   String?
+  ownerUserName String?
+  workspaceId   String?
+  workspaceName String?
+  workspaceIcon String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ownerKey])
+  @@index([workspaceId])
 }
