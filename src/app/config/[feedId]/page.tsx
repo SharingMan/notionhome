@@ -2,8 +2,13 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Client } from '@notionhq/client';
 import ConfigForm from './ConfigForm';
+import { headers } from 'next/headers';
+import { detectLocaleFromHeaders, getMessages } from '@/lib/i18n';
 
 export default async function ConfigPage(props: { params: Promise<{ feedId: string }> }) {
+    const locale = detectLocaleFromHeaders(await headers());
+    const t = getMessages(locale).config;
+
     const params = await props.params;
     const feed = await prisma.feed.findUnique({
         where: { id: params.feedId },
@@ -56,13 +61,13 @@ export default async function ConfigPage(props: { params: Promise<{ feedId: stri
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="bg-white shadow-xl rounded-lg max-w-3xl w-full p-8 space-y-4">
-                    <h1 className="text-2xl font-bold text-gray-900">Error connecting to Notion</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{t.errorTitle}</h1>
                     <p className="text-gray-700 break-words">{errorDetail}</p>
                     <div className="text-sm text-gray-600 space-y-1">
-                        <p>Checklist:</p>
-                        <p>1. Confirm this integration has Read content capability.</p>
-                        <p>2. Open the target database page and Share -&gt; Add connections -&gt; select your integration.</p>
-                        <p>3. Re-run OAuth from the homepage to get a fresh token.</p>
+                        <p>{t.checklistTitle}</p>
+                        <p>1. {t.checklist1}</p>
+                        <p>2. {t.checklist2}</p>
+                        <p>3. {t.checklist3}</p>
                     </div>
                 </div>
             </div>
@@ -73,11 +78,11 @@ export default async function ConfigPage(props: { params: Promise<{ feedId: stri
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="bg-white shadow-xl rounded-lg max-w-3xl w-full p-8 space-y-4">
-                    <h1 className="text-2xl font-bold text-gray-900">No accessible databases found</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{t.emptyTitle}</h1>
                     <div className="text-sm text-gray-600 space-y-1">
-                        <p>1. In Notion, open the database page you want to sync.</p>
-                        <p>2. Click Share -&gt; Add connections, then select your integration.</p>
-                        <p>3. Return to homepage and run Connect Notion again.</p>
+                        <p>1. {t.empty1}</p>
+                        <p>2. {t.empty2}</p>
+                        <p>3. {t.empty3}</p>
                     </div>
                 </div>
             </div>
@@ -87,10 +92,10 @@ export default async function ConfigPage(props: { params: Promise<{ feedId: stri
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="bg-white shadow-xl rounded-lg max-w-2xl w-full p-8">
-                <h1 className="text-3xl font-bold mb-6 text-gray-900">Configure Calendar Sync</h1>
-                <p className="text-gray-600 mb-8">Select the Notion database you want to sync with Apple Calendar.</p>
+                <h1 className="text-3xl font-bold mb-6 text-gray-900">{t.title}</h1>
+                <p className="text-gray-600 mb-8">{t.subtitle}</p>
 
-                <ConfigForm feed={feed} databases={databases} />
+                <ConfigForm feed={feed} databases={databases} locale={locale} />
             </div>
         </div>
     );
