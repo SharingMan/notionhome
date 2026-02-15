@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        path: '/admin',
+        path: '/',
     });
     return response;
 }
