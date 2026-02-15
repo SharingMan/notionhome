@@ -37,6 +37,10 @@ model OwnerPlan {
   periodEndsAt            DateTime?
   source                  String?
   trialUsedAt             DateTime?
+  stripeCustomerId        String?  @unique
+  stripeSubscriptionId    String?  @unique
+  stripeSubscriptionStatus String?
+  stripePriceId           String?
   paypalPayerId           String?
   paypalSubscriptionId    String?  @unique
   paypalSubscriptionStatus String?
