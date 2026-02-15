@@ -104,3 +104,5 @@ npm run dev
 ## QA & Operations Docs
 - Regression checklist: `docs/REGRESSION_CHECKLIST.md`
 - Railway operations runbook: `docs/OPERATIONS_RUNBOOK.md`
+- Release checklist: `docs/RELEASE_CHECKLIST.md`
+- Changelog: `CHANGELOG.md`
