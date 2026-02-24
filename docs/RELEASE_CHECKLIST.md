@@ -5,6 +5,7 @@ Use this checklist for every production release.
 ## 1) Prepare
 
 - [ ] Branch is up to date with `main`.
+- [ ] Changes were integrated in `develop` first and verified in `staging`.
 - [ ] Scope is frozen (no last-minute feature additions).
 - [ ] Env var changes are documented.
 - [ ] DB schema changes reviewed (`prisma/schema.prisma`).
@@ -55,4 +56,3 @@ git push origin main --tags
 - [ ] Confirm payment path works (`/pricing`, trial, PayPal callback/webhook if enabled).
 - [ ] Confirm no abnormal 5xx spikes in logs.
 - [ ] Announce release summary (version + highlights).
-

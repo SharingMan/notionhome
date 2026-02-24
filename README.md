@@ -86,4 +86,5 @@ npm run dev
 - Regression checklist: `docs/REGRESSION_CHECKLIST.md`
 - Railway operations runbook: `docs/OPERATIONS_RUNBOOK.md`
 - Release checklist: `docs/RELEASE_CHECKLIST.md`
+- Environment strategy (local/staging/production): `docs/ENVIRONMENTS.md`
 - Changelog: `CHANGELOG.md`
